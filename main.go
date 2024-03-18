@@ -1,4 +1,4 @@
-package socmedgolang
+package main
 
 import "fmt"
 
