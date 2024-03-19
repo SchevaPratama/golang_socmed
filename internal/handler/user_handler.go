@@ -3,7 +3,6 @@ package handler
 import (
 	"golang_socmed/internal/model"
 	"golang_socmed/internal/service"
-	"log"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
@@ -77,7 +76,6 @@ func (h *UserHandler) Register(c *fiber.Ctx) error {
 	}
 
 	resp, err := h.Service.Register(c.UserContext(), request)
-	log.Println(err)
 	if err != nil {
 		return err
 	}

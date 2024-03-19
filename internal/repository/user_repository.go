@@ -2,7 +2,6 @@ package repository
 
 import (
 	"golang_socmed/internal/entity"
-	"log"
 	"strconv"
 
 	"github.com/jmoiron/sqlx"
@@ -30,7 +29,6 @@ func (r *UserRepository) Create(credentialType string, credentialValue string, r
 	}
 
 	_, err := r.DB.Exec(query, queryParams...)
-	log.Println(query)
 	return err
 }
 
@@ -50,8 +48,6 @@ func (r *UserRepository) GetByEmailOrPhone(credentialType string, credentialValu
 	filterValues = append(filterValues, credentialValue)
 
 	err := r.DB.Get(request, query, filterValues...)
-	log.Println("register repo")
-	log.Println(query)
 	return err
 }
 
