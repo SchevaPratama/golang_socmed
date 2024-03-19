@@ -2,8 +2,9 @@ package entity
 
 type User struct {
 	ID       string
+	Email    string
+	Phone    string
 	Name     string
-	Username string
 	Password string
 }
 

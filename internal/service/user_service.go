@@ -3,7 +3,8 @@ package service
 import (
 	"context"
 	"golang_socmed/internal/entity"
-	helpers "golang_socmed/internal/helper"
+
+	// helpers "golang_socmed/internal/helper"
 	"golang_socmed/internal/model"
 	"golang_socmed/internal/repository"
 	"log"
@@ -29,22 +30,29 @@ func NewUserService(r *repository.UserRepository, validate *validator.Validate, 
 	return &UserService{Repository: r, Validate: validate, Log: log}
 }
 
-func (s *UserService) Register(ctx context.Context, request *model.RegisterRequest) (*model.LoginRegisterResponse, error) {
-
+func (s *UserService) Register(ctx context.Context, request *model.RegisterRequest) (*model.RegisterResponse, error) {
 	// handle request
-	err := helpers.ValidationError(s.Validate, request)
-	if err != nil {
+	// err := helpers.ValidationError(s.Validate, request)
+	// if err != nil {
+	// 	return nil, &fiber.Error{
+	// 		Code:    fiber.StatusBadRequest,
+	// 		Message: err.Error(),
+	// 	}
+	// }
+	// log.Println(err)
+
+	userData, _ := s.getEmailOrPhone(request.CredentialType, request.CredentialValue)
+	if userData != nil && request.CredentialType == "email" {
 		return nil, &fiber.Error{
-			Code:    fiber.StatusBadRequest,
-			Message: err.Error(),
+			Code:    fiber.StatusConflict,
+			Message: "Email already exists",
 		}
 	}
 
-	user, err := s.getUsername(request.Username)
-	if user != nil {
+	if userData != nil && request.CredentialType == "phone" {
 		return nil, &fiber.Error{
 			Code:    fiber.StatusConflict,
-			Message: "Username already exists",
+			Message: "Phone already exists",
 		}
 	}
 
@@ -58,13 +66,23 @@ func (s *UserService) Register(ctx context.Context, request *model.RegisterReque
 		log.Println("Error hashedPassword")
 	}
 
-	user = &entity.User{
-		Name:     request.Name,
-		Username: request.Username,
-		Password: string(hashedPassword),
+	var user *entity.User
+
+	if request.CredentialType == "email" {
+		user = &entity.User{
+			Email:    request.CredentialValue,
+			Name:     request.Name,
+			Password: string(hashedPassword),
+		}
+	} else {
+		user = &entity.User{
+			Phone:    request.CredentialValue,
+			Name:     request.Name,
+			Password: string(hashedPassword),
+		}
 	}
 
-	err = s.Repository.Create(user)
+	err = s.Repository.Create(request.CredentialType, request.CredentialValue, user)
 	if err != nil {
 		log.Println("Gagal menyimpan user", err)
 	}
@@ -72,9 +90,9 @@ func (s *UserService) Register(ctx context.Context, request *model.RegisterReque
 	day := time.Hour * 24
 
 	claims := jtoken.MapClaims{
-		"ID":       user.ID,
-		"username": user.Username,
-		"exp":      time.Now().Add(day * 1).Unix(),
+		"ID":   user.ID,
+		"name": user.Name,
+		"exp":  time.Now().Add(day * 1).Unix(),
 	}
 
 	token := jtoken.NewWithClaims(jtoken.SigningMethodHS256, claims)
@@ -84,11 +102,20 @@ func (s *UserService) Register(ctx context.Context, request *model.RegisterReque
 	if err != nil {
 		return nil, err
 	}
+	var resp *model.RegisterResponse
 
-	resp := &model.LoginRegisterResponse{
-		Username:    user.Username,
-		Name:        user.Name,
-		AccessToken: t,
+	if request.CredentialType == "email" {
+		resp = &model.RegisterResponse{
+			Email:       user.Email,
+			Name:        user.Name,
+			AccessToken: t,
+		}
+	} else {
+		resp = &model.RegisterResponse{
+			Phone:       user.Phone,
+			Name:        user.Name,
+			AccessToken: t,
+		}
 	}
 
 	return resp, nil
@@ -97,15 +124,15 @@ func (s *UserService) Register(ctx context.Context, request *model.RegisterReque
 func (s *UserService) Login(ctx context.Context, request *model.LoginRequest) (*model.LoginRegisterResponse, error) {
 
 	// handle request
-	err := s.Validate.Struct(request)
-	if err != nil {
-		return nil, &fiber.Error{
-			Code:    400,
-			Message: err.Error(),
-		}
-	}
+	// err := s.Validate.Struct(request)
+	// if err != nil {
+	// 	return nil, &fiber.Error{
+	// 		Code:    400,
+	// 		Message: err.Error(),
+	// 	}
+	// }
 
-	user, err := s.getUsername(request.Username)
+	user, err := s.getEmailOrPhone(request.CredentialType, request.CredentialValue)
 	if err != nil {
 		return nil, err
 	}
@@ -122,9 +149,9 @@ func (s *UserService) Login(ctx context.Context, request *model.LoginRequest) (*
 	day := time.Hour * 24
 
 	claims := jtoken.MapClaims{
-		"ID":       user.ID,
-		"username": user.Username,
-		"exp":      time.Now().Add(day * 1).Unix(),
+		"ID":   user.ID,
+		"Name": user.Name,
+		"exp":  time.Now().Add(day * 1).Unix(),
 	}
 
 	token := jtoken.NewWithClaims(jtoken.SigningMethodHS256, claims)
@@ -135,7 +162,8 @@ func (s *UserService) Login(ctx context.Context, request *model.LoginRequest) (*
 	}
 
 	resp := &model.LoginRegisterResponse{
-		Username:    user.Username,
+		Email:       user.Email,
+		Phone:       user.Phone,
 		Name:        user.Name,
 		AccessToken: t,
 	}
@@ -143,9 +171,15 @@ func (s *UserService) Login(ctx context.Context, request *model.LoginRequest) (*
 	return resp, nil
 }
 
-func (s *UserService) getUsername(username string) (*entity.User, error) {
-	user := entity.User{Username: username}
-	err := s.Repository.GetByUsername(&user)
+func (s *UserService) getEmailOrPhone(credentialType string, credentialValue string) (*entity.User, error) {
+	var user entity.User
+	if credentialType == "email" {
+		user = entity.User{Email: credentialValue}
+	}
+	if credentialType == "phone" {
+		user = entity.User{Phone: credentialValue}
+	}
+	err := s.Repository.GetByEmailOrPhone(credentialType, credentialValue, &user)
 	if err != nil {
 		s.Log.WithError(err).Error("Error Get User by Username", err.Error())
 		return nil, &fiber.Error{
