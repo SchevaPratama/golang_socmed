@@ -261,10 +261,31 @@ func (r *UserRepository) GetById(request *model.FriendRequest) (entity.User, err
 	if err := rows.Err(); err != nil {
 		return userData, err
 	}
+
 	// Check for no results
-	if userData.Name == "" {
-		return userData, errors.New("No Data Found")
-	}
+	//if userData.Name == "" {
+	//	return userData, errors.New("No Data Found")
+	//}
 
 	return userData, nil
+}
+
+func (r *UserRepository) GetByUserId(id string) (*entity.User, error) {
+	var user entity.User
+
+	err := r.DB.QueryRowx(`SELECT * FROM users WHERE id = $1`, id).StructScan(&user)
+
+	//row := r.DB.QueryRow("SELECT * FROM users WHERE id = ?", id)
+	//err := row.Scan(&user)
+	if err != nil {
+		return nil, err
+	}
+
+	return &user, nil
+}
+
+func (r *UserRepository) UpdateUser(request entity.User) error {
+	query := `UPDATE users SET name = $1, image_url = $2 WHERE id = $3`
+	_, err := r.DB.Exec(query, request.Name, request.ImageUrl, request.ID)
+	return err
 }

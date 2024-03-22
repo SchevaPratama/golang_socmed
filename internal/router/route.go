@@ -4,7 +4,6 @@ import (
 	"golang_socmed/internal/handler"
 	"golang_socmed/internal/middleware"
 	"net/http"
-
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -22,6 +21,8 @@ func (c *RouteConfig) Setup() {
 
 	c.App.Post("/v1/user/register", c.UserHandler.Register)
 	c.App.Post("/v1/user/login", c.UserHandler.Login)
+
+	//c.App.Patch("/v1/user", c.UserHandler.UpdateUser, authMiddleware)
 
 	image := c.App.Group("/v1/image", authMiddleware)
 	image.Post("/", c.ImageHandler.Upload)
@@ -43,6 +44,7 @@ func (c *RouteConfig) Setup() {
 	user := c.App.Group("/v1/user", authMiddleware)
 	user.Post("/link/email", c.UserHandler.LinkPhoneEmail)
 	user.Post("/link/phone", c.UserHandler.LinkPhoneEmail)
+	user.Patch("", c.UserHandler.UpdateUser)
 
 	c.App.Patch("/v1/bank/account", authMiddleware, func(c *fiber.Ctx) error {
 		return c.SendStatus(http.StatusNotFound)

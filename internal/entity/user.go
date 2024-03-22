@@ -1,6 +1,8 @@
 package entity
 
-import "database/sql"
+import (
+	"database/sql"
+)
 
 type User struct {
 	ID        string
@@ -8,8 +10,10 @@ type User struct {
 	Phone     sql.NullString
 	Name      string
 	Password  string
+	ImageUrl  sql.NullString `db:"image_url"`
 	Friends   []string
 	CreatedAt string
+	UpdatedAt string
 }
 
 func (prod *User) TableName() string {

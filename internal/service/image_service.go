@@ -8,6 +8,7 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/sirupsen/logrus"
 	"io"
+	"os"
 )
 
 type ImageService struct {
@@ -22,7 +23,7 @@ func NewImageService(s *s3.Client, validate *validator.Validate, log *logrus.Log
 
 func (s *ImageService) Upload(ctx context.Context, file io.Reader, filename string) (string, error) {
 	input := &s3.PutObjectInput{
-		Bucket: aws.String("sprint-bucket-public-read"),
+		Bucket: aws.String(os.Getenv("S3_BUCKET_NAME")),
 		Key:    aws.String(filename),
 		ACL:    types.ObjectCannedACLPublicRead,
 		Body:   file,

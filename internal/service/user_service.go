@@ -297,6 +297,26 @@ func (s *UserService) LinkPhoneEmail(ctx context.Context, userId string, types s
 	return nil
 }
 
+func (s *UserService) UpdateUser(ctx context.Context, userId string, request model.UpdateProfileRequest) error {
+
+	user, errs := s.Repository.GetById(&model.FriendRequest{UserId: userId})
+	if errs != nil {
+		s.Log.WithError(errs).Error("failed get user detail")
+		return errs
+	}
+
+	user.Name = request.Name
+	user.ImageUrl = sql.NullString{String: request.ImageUrl, Valid: true}
+
+	err := s.Repository.UpdateUser(user)
+	if err != nil {
+		s.Log.WithError(err).Error("failed to update data")
+		return err
+	}
+
+	return nil
+}
+
 func (s *UserService) getEmailOrPhone(credentialType string, credentialValue string) (*entity.User, error) {
 	var user entity.User
 	if credentialType == "email" {
