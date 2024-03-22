@@ -1,9 +1,11 @@
 package router
 
 import (
-	"github.com/gofiber/fiber/v2"
 	"golang_socmed/internal/handler"
 	"golang_socmed/internal/middleware"
+	"net/http"
+
+	"github.com/gofiber/fiber/v2"
 )
 
 type RouteConfig struct {
@@ -23,7 +25,7 @@ func (c *RouteConfig) Setup() {
 
 	image := c.App.Group("/v1/image", authMiddleware)
 	image.Post("/", c.ImageHandler.Upload)
-  
+
 	// product := c.App.Group("/v1/product", authMiddleware)
 	// product.Get("", c.ProductHandler.List)
 	// product.Post("", c.ProductHandler.Create)
