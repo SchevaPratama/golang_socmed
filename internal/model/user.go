@@ -21,6 +21,35 @@ type RegisterResponse struct {
 	AccessToken string `json:"accessToken"`
 }
 
+type FriendRequest struct {
+	UserId string `json:"userId" validate:"required,min=5,max=50"`
+}
+
+type FriendResponse struct {
+	UserId      string
+	Name        string
+	ImageUrl    string
+	FriendCount int
+	CreatedAt   string
+}
+
+type FriendFilter struct {
+	Limit      *int    `json:"limit"`
+	Offset     *int    `json:"offset"`
+	SortBy     *string `json:"sortBy"`
+	OrderBy    *string `json:"orderBy"`
+	OnlyFriend *bool   `json:"onlyFriend"`
+	Search     *string `json:"search"`
+}
+
+type EmailRequest struct {
+	Email string `json:"email" validate:"required,email"`
+}
+
+type PhoneRequest struct {
+	Phone string `json:"phone" validate:"required,phone"`
+}
+
 // Custom validation function for CredentialValue
 func ValidateCredential(fl validator.FieldLevel) bool {
 	credentialType := fl.Parent().FieldByName("CredentialType").String()
@@ -34,6 +63,12 @@ func ValidateCredential(fl validator.FieldLevel) bool {
 	default:
 		return false
 	}
+}
+
+func PhoneValidation(fl validator.FieldLevel) bool {
+	phone := fl.Field().String()
+	// Check if the phone number starts with "+" and has a length between 7 and 13
+	return len(phone) >= 7 && len(phone) <= 13 && phone[0] == '+'
 }
 
 // isEmailValid checks if the email provided is valid by regex.
