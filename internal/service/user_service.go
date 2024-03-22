@@ -2,7 +2,10 @@ package service
 
 import (
 	"context"
+	"database/sql"
 	"golang_socmed/internal/entity"
+	helpers "golang_socmed/internal/helper"
+	"golang_socmed/internal/model/converter"
 
 	// helpers "golang_socmed/internal/helper"
 	"golang_socmed/internal/model"
@@ -70,13 +73,13 @@ func (s *UserService) Register(ctx context.Context, request *model.RegisterReque
 
 	if request.CredentialType == "email" {
 		user = &entity.User{
-			Email:    request.CredentialValue,
+			Email:    sql.NullString{String: request.CredentialValue, Valid: true},
 			Name:     request.Name,
 			Password: string(hashedPassword),
 		}
 	} else {
 		user = &entity.User{
-			Phone:    request.CredentialValue,
+			Phone:    sql.NullString{String: request.CredentialValue, Valid: true},
 			Name:     request.Name,
 			Password: string(hashedPassword),
 		}
@@ -106,13 +109,13 @@ func (s *UserService) Register(ctx context.Context, request *model.RegisterReque
 
 	if request.CredentialType == "email" {
 		resp = &model.RegisterResponse{
-			Email:       user.Email,
+			Email:       user.Email.String,
 			Name:        user.Name,
 			AccessToken: t,
 		}
 	} else {
 		resp = &model.RegisterResponse{
-			Phone:       user.Phone,
+			Phone:       user.Phone.String,
 			Name:        user.Name,
 			AccessToken: t,
 		}
@@ -150,7 +153,7 @@ func (s *UserService) Login(ctx context.Context, request *model.LoginRequest) (*
 
 	claims := jtoken.MapClaims{
 		"ID":   user.ID,
-		"Name": user.Name,
+		"name": user.Name,
 		"exp":  time.Now().Add(day * 1).Unix(),
 	}
 
@@ -162,8 +165,8 @@ func (s *UserService) Login(ctx context.Context, request *model.LoginRequest) (*
 	}
 
 	resp := &model.LoginRegisterResponse{
-		Email:       user.Email,
-		Phone:       user.Phone,
+		Email:       user.Email.String,
+		Phone:       user.Phone.String,
 		Name:        user.Name,
 		AccessToken: t,
 	}
@@ -171,13 +174,122 @@ func (s *UserService) Login(ctx context.Context, request *model.LoginRequest) (*
 	return resp, nil
 }
 
+func (s *UserService) GetFriends(ctx context.Context, filter *model.FriendFilter, userId string) ([]model.FriendResponse, error) {
+	if err := helpers.ValidationError(s.Validate, filter); err != nil {
+		s.Log.WithError(err).Error("failed to validate request query params")
+		return nil, err
+	}
+
+	users, err := s.Repository.GetUsers(filter, userId)
+	if err != nil {
+		s.Log.WithError(err).Error("failed get product lists")
+		return nil, err
+	}
+
+	newusers := make([]model.FriendResponse, len(users))
+	for i, user := range users {
+		newusers[i] = *converter.FriendConverter(&user)
+	}
+
+	return newusers, nil
+}
+
+func (s *UserService) AddFriend(ctx context.Context, userId string, request *model.FriendRequest) error {
+	if err := helpers.ValidationError(s.Validate, request); err != nil {
+		s.Log.WithError(err).Error("failed to validate request body")
+		return err
+	}
+
+	_, errs := s.Repository.GetById(request)
+	if errs != nil {
+		s.Log.WithError(errs).Error("failed get user detail")
+		return errs
+	}
+
+	err := s.Repository.AddFriend(request.UserId, userId)
+	if err != nil {
+		s.Log.WithError(err).Error("failed to update data")
+		return err
+	}
+
+	return nil
+}
+
+func (s *UserService) DeleteFriend(ctx context.Context, userId string, request *model.FriendRequest) error {
+	// if err := s.Validate.Struct(request); err != nil {
+	if err := helpers.ValidationError(s.Validate, request); err != nil {
+		s.Log.WithError(err).Error("failed to validate request body")
+		return err
+	}
+
+	_, errs := s.Repository.GetById(request)
+	if errs != nil {
+		s.Log.WithError(errs).Error("failed get user detail")
+		return errs
+	}
+
+	err := s.Repository.DeleteFriend(request.UserId, userId)
+	if err != nil {
+		s.Log.WithError(err).Error("failed to update data")
+		return err
+	}
+
+	return nil
+}
+
+func (s *UserService) LinkPhoneEmail(ctx context.Context, userId string, types string, value string) error {
+	log.Println(value)
+	userData, _ := s.getEmailOrPhone(types, value)
+	if userData != nil && types == "email" {
+		return &fiber.Error{
+			Code:    fiber.StatusConflict,
+			Message: "Email already exists",
+		}
+	}
+
+	if userData != nil && types == "phone" {
+		return &fiber.Error{
+			Code:    fiber.StatusConflict,
+			Message: "Phone already exists",
+		}
+	}
+
+	user, errs := s.Repository.GetById(&model.FriendRequest{UserId: userId})
+	if errs != nil {
+		s.Log.WithError(errs).Error("failed get user detail")
+		return errs
+	}
+
+	if types == "email" && user.Email.String != "" {
+		return &fiber.Error{
+			Code:    fiber.StatusConflict,
+			Message: "Can't Change Email Of This Account",
+		}
+	}
+
+	if types == "phone" && user.Phone.String != "" {
+		return &fiber.Error{
+			Code:    fiber.StatusConflict,
+			Message: "Can't Change Phone Of This Account",
+		}
+	}
+
+	err := s.Repository.LinkPhoneEmail(types, value, userId)
+	if err != nil {
+		s.Log.WithError(err).Error("failed to update data")
+		return err
+	}
+
+	return nil
+}
+
 func (s *UserService) getEmailOrPhone(credentialType string, credentialValue string) (*entity.User, error) {
 	var user entity.User
 	if credentialType == "email" {
-		user = entity.User{Email: credentialValue}
+		user = entity.User{Email: sql.NullString{String: credentialValue, Valid: true}}
 	}
 	if credentialType == "phone" {
-		user = entity.User{Phone: credentialValue}
+		user = entity.User{Phone: sql.NullString{String: credentialValue, Valid: true}}
 	}
 	err := s.Repository.GetByEmailOrPhone(credentialType, credentialValue, &user)
 	if err != nil {

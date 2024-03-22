@@ -26,14 +26,23 @@ func (c *RouteConfig) Setup() {
 	image := c.App.Group("/v1/image", authMiddleware)
 	image.Post("/", c.ImageHandler.Upload)
 
-	product := c.App.Group("/v1/product", authMiddleware)
-	product.Get("", c.ProductHandler.List)
-	product.Post("", c.ProductHandler.Create)
-	product.Get("/:id", c.ProductHandler.Get)
-	product.Delete("/:id", c.ProductHandler.Delete)
-	product.Put("/:id", c.ProductHandler.Update)
-	product.Post("/:id/stock", c.ProductHandler.UpdateStock)
-	product.Post("/:id/buy", c.ProductHandler.Buy)
+	// product := c.App.Group("/v1/product", authMiddleware)
+	// product.Get("", c.ProductHandler.List)
+	// product.Post("", c.ProductHandler.Create)
+	// product.Get("/:id", c.ProductHandler.Get)
+	// product.Delete("/:id", c.ProductHandler.Delete)
+	// product.Put("/:id", c.ProductHandler.Update)
+	// product.Post("/:id/stock", c.ProductHandler.UpdateStock)
+	// product.Post("/:id/buy", c.ProductHandler.Buy)
+
+	friend := c.App.Group("/v1/friend", authMiddleware)
+	friend.Get("", c.UserHandler.GetFriends)
+	friend.Post("", c.UserHandler.AddFriend)
+	friend.Delete("", c.UserHandler.DeleteFriend)
+
+	user := c.App.Group("/v1/user", authMiddleware)
+	user.Post("/link/email", c.UserHandler.LinkPhoneEmail)
+	user.Post("/link/phone", c.UserHandler.LinkPhoneEmail)
 
 	c.App.Patch("/v1/bank/account", authMiddleware, func(c *fiber.Ctx) error {
 		return c.SendStatus(http.StatusNotFound)
