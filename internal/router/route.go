@@ -1,10 +1,10 @@
 package router
 
 import (
-	"github.com/gofiber/fiber/v2"
 	"golang_socmed/internal/handler"
 	"golang_socmed/internal/middleware"
 	"net/http"
+	"github.com/gofiber/fiber/v2"
 )
 
 type RouteConfig struct {

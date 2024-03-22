@@ -8,6 +8,7 @@ import (
 	"log"
 	"strconv"
 
+	"github.com/gofiber/fiber/v2"
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
 )
@@ -59,11 +60,25 @@ func (r *UserRepository) GetUsers(filter *model.FriendFilter, userId string) ([]
 		query += "ARRAY['" + userId + "']::text[] <@ friends::text[]"
 	}
 
-	// Add sorting if SortField and SortOrder are provided
-	if *filter.SortBy != "" && *filter.OrderBy != "" {
-		query += ` ORDER BY ` + *filter.SortBy + ` ` + *filter.OrderBy
+	query += ` ORDER BY `
+
+	if *filter.SortBy != "" {
+		if *filter.SortBy == "createdAt" {
+			query += ` createdAt `
+		}
+
+		if *filter.SortBy == "friendCount" {
+			query += ` cardinality(friends) `
+		}
 	} else {
-		query += ` ORDER BY createdAt DESC`
+		query += ` createdAt `
+	}
+
+	// Add sorting if SortField and SortOrder are provided
+	if *filter.OrderBy != "" {
+		query += *filter.OrderBy
+	} else {
+		query += ` DESC`
 	}
 
 	if *filter.Limit != 0 {
@@ -127,7 +142,7 @@ func (r *UserRepository) GetByEmailOrPhone(credentialType string, credentialValu
 	// 	query += `SELECT phone, name from users where phone = $` + strconv.Itoa(len(filterValues)+1)
 	// 	filterValues = append(filterValues, credentialValue)
 	// }
-	query += `SELECT id, ` + credentialType + `, name, password from users where ` + credentialType + ` = $` + strconv.Itoa(len(filterValues)+1)
+	query += `SELECT id, email, phone, name, password from users where ` + credentialType + ` = $` + strconv.Itoa(len(filterValues)+1)
 	filterValues = append(filterValues, credentialValue)
 
 	err := r.DB.Get(request, query, filterValues...)
@@ -143,10 +158,11 @@ func (r *UserRepository) AddFriend(friendId string, userId string) error {
 		return err3
 	}
 
-	log.Println(exists)
-
 	if exists {
-		return errors.New("User Already Friend")
+		return &fiber.Error{
+			Code:    fiber.StatusBadRequest,
+			Message: "User Already Friend",
+		}
 	} else {
 		_, err := r.DB.Exec(query, friendId, userId)
 		if err != nil {
@@ -172,7 +188,10 @@ func (r *UserRepository) DeleteFriend(friendId string, userId string) error {
 	}
 
 	if !exists {
-		return errors.New("Friend Not Found")
+		return &fiber.Error{
+			Code:    fiber.StatusBadRequest,
+			Message: "Friend Not Found",
+		}
 	} else {
 		_, err := r.DB.Exec(query, friendId, userId)
 		if err != nil {
@@ -214,10 +233,8 @@ func (r *UserRepository) GetById(request *model.FriendRequest) (entity.User, err
 
 	userData := entity.User{}
 
-	// Execute the query
 	rows, err := r.DB.Query(query, request.UserId)
 	if err != nil {
-		// Handle error
 		return userData, err
 	}
 

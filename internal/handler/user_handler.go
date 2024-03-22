@@ -173,7 +173,7 @@ func (h *UserHandler) AddFriend(c *fiber.Ctx) error {
 	}
 
 	if err := h.Service.AddFriend(c.UserContext(), userId, request); err != nil {
-		return &fiber.Error{Message: err.Error(), Code: 400}
+		return err
 	}
 
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
@@ -202,7 +202,7 @@ func (h *UserHandler) DeleteFriend(c *fiber.Ctx) error {
 	}
 
 	if err := h.Service.DeleteFriend(c.UserContext(), userId, request); err != nil {
-		return &fiber.Error{Message: err.Error(), Code: 400}
+		return err
 	}
 
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
@@ -261,7 +261,7 @@ func (h *UserHandler) LinkPhoneEmail(c *fiber.Ctx) error {
 	}
 
 	if err := h.Service.LinkPhoneEmail(c.UserContext(), userId, types, value); err != nil {
-		return &fiber.Error{Message: err.Error(), Code: 400}
+		return err
 	}
 
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
