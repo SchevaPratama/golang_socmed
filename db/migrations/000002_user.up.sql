@@ -6,6 +6,7 @@ CREATE TABLE IF NOT EXISTS users (
     name VARCHAR(255) NOT NULL,
     friends VARCHAR[] NOT NULL default array[]::varchar[],
     password TEXT NOT NULL,
+    image_url TEXT NULL,
     createdAt timestamptz not null default current_timestamp,
     updatedAt timestamptz not null default current_timestamp
 );
