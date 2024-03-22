@@ -60,6 +60,9 @@ func (h *ImageHandler) Upload(c *fiber.Ctx) error {
 	}
 
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
-		"imageUrl": url,
+		"message": "File uploaded successfully",
+		"data": fiber.Map{
+			"imageUrl": url,
+		},
 	})
 }
