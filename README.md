@@ -18,7 +18,7 @@ cd golang_social
 
 2. Copy the .env.example file and create a new .env file:
 
-```env
+```bash
 cp .env.example .env
 ```
 
@@ -28,7 +28,13 @@ cp .env.example .env
 go mod download
 ```
 
-4. Run the application:
+4. Migration database:
+
+```bash
+migrate -database "postgres://username:password@host:port/dbname?sslmode=disable" -path db/migrations up
+```
+
+5. Run the application:
 
 ```bash
 go run ./cmd/main.go
