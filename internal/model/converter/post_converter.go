@@ -25,7 +25,7 @@ func PostConverter(post *entity.Post) *model.PostResponse {
 			Tags:       post.Tags,
 			CreatedAt:  postCreatedAt.Format(time.RFC3339),
 		},
-		Creator: model.PostCreator{
+		Creator: model.FriendResponse{
 			UserId:      post.UserId,
 			Name:        post.UserName,
 			FriendCount: len(post.UserFriends),
