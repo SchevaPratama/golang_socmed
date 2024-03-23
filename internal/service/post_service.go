@@ -25,7 +25,7 @@ func NewPostService(r *repository.PostRepository, validate *validator.Validate, 
 	return &PostService{Repository: r, Validate: validate, Log: log}
 }
 
-func (s *PostService) List(ctx context.Context, filter *model.PostFilter) ([]model.PostResponse, error) {
+func (s *PostService) List(ctx context.Context, filter *model.PostFilter, userId string) ([]model.PostResponse, error) {
 
 	if err := helpers.ValidationError(s.Validate, filter); err != nil {
 		s.Log.WithError(err).Error("failed to validate request query params")
@@ -35,7 +35,7 @@ func (s *PostService) List(ctx context.Context, filter *model.PostFilter) ([]mod
 		}
 	}
 
-	posts, err := s.Repository.List(filter)
+	posts, err := s.Repository.List(filter, userId)
 	if err != nil {
 		s.Log.WithError(err).Error("failed get post lists")
 		return nil, err

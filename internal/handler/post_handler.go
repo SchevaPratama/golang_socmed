@@ -21,13 +21,13 @@ func NewPostHandler(s *service.PostService, log *logrus.Logger) *PostHandler {
 }
 
 func (b *PostHandler) List(c *fiber.Ctx) error {
-	// userId, ok := c.Locals("userLoggedInId").(string)
-	// if !ok {
-	// 	return &fiber.Error{
-	// 		Code:    500,
-	// 		Message: "Failed",
-	// 	}
-	// }
+	userId, ok := c.Locals("userLoggedInId").(string)
+	if !ok {
+		return &fiber.Error{
+			Code:    500,
+			Message: "Failed",
+		}
+	}
 
 	// searchTag := c.Query("searchTag", "hehe", "[]string")
 
@@ -51,7 +51,7 @@ func (b *PostHandler) List(c *fiber.Ctx) error {
 		return fiber.ErrBadRequest
 	}
 
-	products, err := b.Service.List(c.UserContext(), filter)
+	products, err := b.Service.List(c.UserContext(), filter, userId)
 	if err != nil {
 		return err
 	}

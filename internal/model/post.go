@@ -13,9 +13,18 @@ type Post struct {
 	CreatedAt  string   `json:"createdAt"`
 }
 
+type PostCreator struct {
+	UserId      string `json:"userId"`
+	Name        string
+	ImageUrl    string
+	FriendCount int
+	CreatedAt   string `json:"createdAt"`
+}
+
 type PostResponse struct {
-	PostId string
-	Post   *Post
+	PostId  string
+	Post    Post
+	Creator PostCreator
 }
 
 type PostRequest struct {
