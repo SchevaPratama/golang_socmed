@@ -18,6 +18,7 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 	jtoken "github.com/golang-jwt/jwt/v4"
+	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
 
 	"golang.org/x/crypto/bcrypt"
@@ -176,11 +177,11 @@ func (s *UserService) Login(ctx context.Context, request *model.LoginRequest) (*
 	return resp, nil
 }
 
-func (s *UserService) GetFriends(ctx context.Context, filter *model.FriendFilter, userId string) ([]model.FriendResponse, error) {
-	if err := helpers.ValidationError(s.Validate, filter); err != nil {
-		s.Log.WithError(err).Error("failed to validate request query params")
-		return nil, err
-	}
+func (s *UserService) GetFriends(ctx context.Context, filter model.FriendFilter, userId string) ([]model.FriendResponse, error) {
+	// if err := helpers.ValidationError(s.Validate, filter); err != nil {
+	// 	s.Log.WithError(err).Error("failed to validate request query params")
+	// 	return nil, err
+	// }
 
 	users, err := s.Repository.GetUsers(filter, userId)
 	if err != nil {
@@ -205,13 +206,18 @@ func (s *UserService) AddFriend(ctx context.Context, userId string, request *mod
 		}
 	}
 
+	_, errUuid := uuid.Parse(request.UserId)
+	if errUuid != nil {
+		return &fiber.Error{
+			Code:    fiber.StatusNotFound,
+			Message: errUuid.Error(),
+		}
+	}
+
 	_, errs := s.Repository.GetById(request)
 	if errs != nil {
 		s.Log.WithError(errs).Error("User Not Found", errs.Error())
-		return &fiber.Error{
-			Code:    fiber.StatusNotFound,
-			Message: "User Not Found",
-		}
+		return errs
 	}
 
 	err := s.Repository.AddFriend(request.UserId, userId)

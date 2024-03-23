@@ -1,7 +1,6 @@
 package repository
 
 import (
-	"errors"
 	"fmt"
 	"golang_socmed/internal/entity"
 	"golang_socmed/internal/model"
@@ -38,7 +37,7 @@ func (r *UserRepository) Create(credentialType string, credentialValue string, r
 	return err
 }
 
-func (r *UserRepository) GetUsers(filter *model.FriendFilter, userId string) ([]entity.User, error) {
+func (r *UserRepository) GetUsers(filter model.FriendFilter, userId string) ([]entity.User, error) {
 	tx, _ := r.DB.Beginx()
 	defer tx.Rollback()
 
@@ -46,12 +45,12 @@ func (r *UserRepository) GetUsers(filter *model.FriendFilter, userId string) ([]
 	var filterValues []interface{}
 
 	// Conditionally append filters
-	if *filter.Search != "" {
-		query += ` WHERE name LIKE CONCAT('%', $1::TEXT, '%')`
-		filterValues = append(filterValues, *filter.Search)
+	if filter.Search != "" {
+		query += ` WHERE name ~* $` + strconv.Itoa(len(filterValues)+1)
+		filterValues = append(filterValues, filter.Search)
 	}
 
-	if *filter.OnlyFriend {
+	if filter.OnlyFriend {
 		if len(filterValues) > 0 {
 			query += ` AND `
 		} else {
@@ -62,33 +61,33 @@ func (r *UserRepository) GetUsers(filter *model.FriendFilter, userId string) ([]
 
 	query += ` ORDER BY `
 
-	if *filter.SortBy != "" {
-		if *filter.SortBy == "createdAt" {
-			query += ` createdAt `
+	if filter.SortBy != "" {
+		if filter.SortBy == "createdAt" {
+			query += `createdAt `
 		}
 
-		if *filter.SortBy == "friendCount" {
-			query += ` cardinality(friends) `
+		if filter.SortBy == "friendCount" {
+			query += `cardinality(friends) `
 		}
 	} else {
-		query += ` createdAt `
+		query += `createdAt `
 	}
 
 	// Add sorting if SortField and SortOrder are provided
-	if *filter.OrderBy != "" {
-		query += *filter.OrderBy
+	if filter.OrderBy != "" {
+		query += filter.OrderBy
 	} else {
 		query += ` DESC`
 	}
 
-	if *filter.Limit != 0 {
+	if filter.Limit != 0 {
 		query += fmt.Sprintf(" LIMIT $%s", strconv.Itoa(len(filterValues)+1))
 		filterValues = append(filterValues, filter.Limit)
 	} else {
 		query += " LIMIT 5"
 	}
 
-	if *filter.Offset != 0 {
+	if filter.Offset != 0 {
 		query += fmt.Sprintf(" OFFSET $%s", strconv.Itoa(len(filterValues)+1))
 		filterValues = append(filterValues, filter.Offset)
 	} else {
@@ -96,6 +95,7 @@ func (r *UserRepository) GetUsers(filter *model.FriendFilter, userId string) ([]
 	}
 
 	log.Println(query)
+	log.Println(filterValues...)
 
 	// Execute the query
 	rows, err := r.DB.Query(query, filterValues...)
@@ -263,9 +263,12 @@ func (r *UserRepository) GetById(request *model.FriendRequest) (entity.User, err
 	}
 
 	// Check for no results
-	//if userData.Name == "" {
-	//	return userData, errors.New("No Data Found")
-	//}
+	if userData.Name == "" {
+		return userData, &fiber.Error{
+			Code:    fiber.StatusNotFound,
+			Message: "User Not Found",
+		}
+	}
 
 	return userData, nil
 }

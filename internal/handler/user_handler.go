@@ -4,6 +4,7 @@ import (
 	helpers "golang_socmed/internal/helper"
 	"golang_socmed/internal/model"
 	"golang_socmed/internal/service"
+	"log"
 	"net/url"
 	"path/filepath"
 	"strconv"
@@ -117,25 +118,135 @@ func (h *UserHandler) GetFriends(c *fiber.Ctx) error {
 		}
 	}
 
-	keyword := c.Query("search")
-	sortBy := c.Query("sortBy")
-	orderBy := c.Query("orderBy")
-	onlyFriend, _ := strconv.ParseBool(c.Query("onlyFriend"))
-	limit, _ := strconv.Atoi(c.Query("limit"))
-	offset, _ := strconv.Atoi(c.Query("offset"))
+	filter := model.FriendFilter{
+		Search:     "",
+		SortBy:     "createdAt",
+		OrderBy:    "desc",
+		OnlyFriend: false,
+		Limit:      5,
+		Offset:     0,
+	}
 
-	filter := &model.FriendFilter{
-		Search:     &keyword,
-		SortBy:     &sortBy,
-		OrderBy:    &orderBy,
-		OnlyFriend: &onlyFriend,
-		Limit:      &limit,
-		Offset:     &offset}
+	maps := c.Queries()
 
-	if err := c.QueryParser(filter); err != nil {
-		h.Log.WithError(err).Error("failed to process request")
+	filter.Search = c.Query("search")
+	if val, ok := maps["sortBy"]; ok {
+		if val != "" {
+			if val == "createdAt" || val == "friendCount" {
+				filter.SortBy = val
+			} else {
+				return &fiber.Error{Code: fiber.ErrBadRequest.Code, Message: "sortBy value not defined"}
+			}
+		} else {
+			return &fiber.Error{Code: fiber.ErrBadRequest.Code, Message: "sortBy can't be empty"}
+		}
+	} else {
+		filter.SortBy = "createdAt"
+	}
+
+	if val, ok := maps["orderBy"]; ok {
+		if val != "" {
+			if val == "asc" || val == "desc" {
+				filter.OrderBy = val
+			} else {
+				return &fiber.Error{Code: fiber.ErrBadRequest.Code, Message: "orderBy value not defined"}
+			}
+		} else {
+			return &fiber.Error{Code: fiber.ErrBadRequest.Code, Message: "orderBy can't be empty"}
+		}
+	} else {
+		filter.OrderBy = "desc"
+	}
+
+	if val, ok := maps["onlyFriend"]; ok {
+		if val != "" {
+			onlyFriendParsed, _ := strconv.ParseBool(c.Query("onlyFriend"))
+			if onlyFriendParsed == true || onlyFriendParsed == false {
+				filter.OnlyFriend = onlyFriendParsed
+			} else {
+				return &fiber.Error{Code: fiber.ErrBadRequest.Code, Message: "onlyFriend Param is not boolean"}
+			}
+		} else {
+			return &fiber.Error{Code: fiber.ErrBadRequest.Code, Message: "Limit can't be empty"}
+		}
+	} else {
+		filter.OnlyFriend = false
+	}
+
+	if c.Query("onlyFriend") != "" {
+		onlyFriend, err := strconv.ParseBool(c.Query("onlyFriend"))
+		if err != nil {
+			return &fiber.Error{Code: fiber.ErrBadRequest.Code, Message: "onlyFriend Param is not boolean"}
+		} else {
+			filter.OnlyFriend = onlyFriend
+		}
+	} else {
+		filter.OnlyFriend = false
+	}
+
+	if val, ok := maps["limit"]; ok {
+		if val != "" {
+			limitParsed, _ := strconv.Atoi(val)
+			if limitParsed < 0 {
+				return &fiber.Error{Code: fiber.ErrBadRequest.Code, Message: "Limit minimal 0"}
+			}
+			filter.Limit = limitParsed
+		} else {
+			return &fiber.Error{Code: fiber.ErrBadRequest.Code, Message: "Limit can't be empty"}
+		}
+	} else {
+		filter.Limit = 5
+	}
+
+	// if c.Query("limit") == "" {
+	// 	return &fiber.Error{Code: fiber.ErrBadRequest.Code, Message: "Limit can't be empty"}
+	// } else {
+	// 	filter.Limit = 5
+	// }
+
+	// limitParsed, _ := strconv.Atoi(c.Query("limit"))
+	// if limitParsed < 0 {
+	// 	return &fiber.Error{Code: fiber.ErrBadRequest.Code, Message: "Limit minimal 0"}
+	// }
+
+	// filter.Limit = limitParsed
+
+	if val, ok := maps["offset"]; ok {
+		if val != "" {
+			offsetParsed, _ := strconv.Atoi(val)
+			if offsetParsed < 0 {
+				return &fiber.Error{Code: fiber.ErrBadRequest.Code, Message: "Offset minimal 0"}
+			}
+			filter.Offset = offsetParsed
+		} else {
+			return &fiber.Error{Code: fiber.ErrBadRequest.Code, Message: "Offset can't be empty"}
+		}
+	} else {
+		filter.Offset = 0
+	}
+
+	log.Println(c.Queries())
+
+	// if c.Query("offset") == "" {
+	// 	return &fiber.Error{Code: fiber.ErrBadRequest.Code, Message: "Offset can't be empty"}
+	// } else {
+	// 	filter.Offset = 0
+	// }
+
+	// offsetParsed, _ := strconv.Atoi(c.Query("offset"))
+	// if offsetParsed < 0 {
+	// 	return &fiber.Error{Code: fiber.ErrBadRequest.Code, Message: "Offet minimal 0"}
+	// }
+
+	// filter.Offset = offsetParsed
+
+	errParse := c.QueryParser(&filter)
+	if errParse != nil {
+		h.Log.WithError(errParse).Error("failed to process request")
 		return fiber.ErrBadRequest
 	}
+
+	log.Println(filter)
 
 	users, err := h.Service.GetFriends(c.UserContext(), filter, userId)
 	if err != nil {
@@ -146,8 +257,8 @@ func (h *UserHandler) GetFriends(c *fiber.Ctx) error {
 		"message": "ok",
 		"data":    users,
 		"meta": fiber.Map{
-			"limit":  limit,
-			"offset": offset,
+			"limit":  filter.Limit,
+			"offset": filter.Offset,
 			"total":  len(users),
 		},
 	})
