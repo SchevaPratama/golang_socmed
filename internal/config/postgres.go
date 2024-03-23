@@ -12,16 +12,38 @@ import (
 )
 
 func NewDatabase(viper *viper.Viper) *sqlx.DB {
+	var idleConnection int
+	var maxConnection int
+	var maxLifeTimeConnection int
+
 	username := os.Getenv("DB_USERNAME")
 	password := os.Getenv("DB_PASSWORD") // viper.GetString("database.password")
 	host := os.Getenv("DB_HOST")         //viper.GetString("database.host")
 	port := os.Getenv("DB_PORT")         // viper.GetInt("database.port")
 	database := os.Getenv("DB_NAME")     //viper.GetString("database.name")
-	idleConnection := viper.GetInt("database.pool.idle")
-	maxConnection := viper.GetInt("database.pool.max")
-	maxLifeTimeConnection := viper.GetInt("database.pool.lifetime")
+	//idleConnection := viper.GetInt("database.pool.idle")
+	//maxConnection := viper.GetInt("database.pool.max")
+	//maxLifeTimeConnection := viper.GetInt("database.pool.lifetime")
 
-	dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", host, port, username, password, database)
+	if viper.IsSet("database.pool.idle") {
+		idleConnection = viper.GetInt("database.pool.idle")
+	} else {
+		idleConnection = 10
+	}
+
+	if viper.IsSet("database.pool.max") {
+		maxConnection = viper.GetInt("database.pool.max")
+	} else {
+		maxConnection = 100
+	}
+
+	if viper.IsSet("database.pool.lifetime") {
+		maxLifeTimeConnection = viper.GetInt("database.pool.lifetime")
+	} else {
+		maxLifeTimeConnection = 100
+	}
+
+	dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s %s", host, port, username, password, database, os.Getenv("DB_PARAMS"))
 
 	db, err := sqlx.Connect("postgres", dsn)
 	if err != nil {

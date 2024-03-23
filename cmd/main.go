@@ -20,8 +20,8 @@ func main() {
 		Log:      log,
 		Aws:      aws,
 	})
-	webPort := viperConfig.GetInt("web.port")
-	err := app.Listen(fmt.Sprintf(":%d", webPort))
+	//webPort := viperConfig.GetInt("web.port")
+	err := app.Listen(fmt.Sprintf(":%d", 8080))
 	if err != nil {
 		log.Fatal("Failed to start server: %w \n", err)
 	}
