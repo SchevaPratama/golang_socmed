@@ -1,10 +1,10 @@
 package model
 
 type PostFilter struct {
-	Search     string   `query:"search" validate:"omitempty"`
+	Search     string   `query:"search" validate:"omitempty,alphanum"`
 	SearchTags []string `query:"searchTag" validate:"omitempty,dive,required"`
-	Limit      int      `query:"limit"`
-	Offset     int      `query:"offset"`
+	Limit      int      `query:"limit" validate:"number,min=1"`
+	Offset     int      `query:"offset" validate:"number,min=0"`
 }
 
 type Post struct {
@@ -22,13 +22,13 @@ type Post struct {
 // }
 
 type PostResponse struct {
-	PostId   string
-	Post     Post
-	Creator  FriendResponse
-	Comments []CommentResponse
+	PostId   string            `json:"post_id"`
+	Post     Post              `json:"post"`
+	Creator  FriendResponse    `json:"creator"`
+	Comments []CommentResponse `json:"comment"`
 }
 
 type PostRequest struct {
 	PostInHtml string   `json:"postInHtml" validate:"required,min=2,max=500"`
-	Tags       []string `query:"tags" validate:"required,dive,required"`
+	Tags       []string `json:"tags" validate:"required,dive,required"`
 }

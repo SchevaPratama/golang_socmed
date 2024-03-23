@@ -70,7 +70,10 @@ func (s *PostService) Create(ctx context.Context, request *model.PostRequest, us
 	// if err := s.Validate.Struct(request); err != nil {
 	if err := helpers.ValidationError(s.Validate, request); err != nil {
 		s.Log.Error("failed to validate request body")
-		return err
+		return &fiber.Error{
+			Code:    400,
+			Message: err.Error(),
+		}
 	}
 
 	newRequest := &entity.Post{
@@ -93,7 +96,10 @@ func (s *PostService) CreateComment(ctx context.Context, request *model.CommentR
 	// if err := s.Validate.Struct(request); err != nil {
 	if err := helpers.ValidationError(s.Validate, request); err != nil {
 		s.Log.Error("failed to validate request body")
-		return err
+		return &fiber.Error{
+			Code:    400,
+			Message: err.Error(),
+		}
 	}
 
 	post := new(entity.Post)
@@ -103,18 +109,18 @@ func (s *PostService) CreateComment(ctx context.Context, request *model.CommentR
 		return err
 	}
 
-	// newRequest := &entity.Comment{
-	// 	ID:      uuid.New().String(),
-	// 	PostId:  request.PostId,
-	// 	Comment: request.Comment,
-	// 	UserId:  userId,
-	// }
+	newRequest := &entity.Comment{
+		ID:      uuid.New().String(),
+		PostId:  request.PostId,
+		Comment: request.Comment,
+		UserId:  userId,
+	}
 
-	// err = s.CommentRepository.Create(newRequest)
-	// if err != nil {
-	// 	//s.Log.Error("failed to insert new data")
-	// 	return err
-	// }
+	err = s.CommentRepository.Create(newRequest)
+	if err != nil {
+		//s.Log.Error("failed to insert new data")
+		return err
+	}
 
 	return nil
 }

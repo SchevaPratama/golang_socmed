@@ -18,6 +18,9 @@ func NewCommentRepository(db *sqlx.DB) *CommentRepository {
 
 func (r *CommentRepository) List(postIds []string) ([]entity.Comment, error) {
 
+	if len(postIds) < 1 {
+		return nil, nil
+	}
 	query := "SELECT c.id, c.comment, c.created_at, c.user_id, c.post_id, u.name as user_name, u.friends as user_friends, u.createdat as user_created_at FROM comments as c LEFT JOIN users as u ON u.id::text = c.user_id::text WHERE c.post_id IN (" + strings.Join(postIds, ",") + ") ORDER BY c.created_at DESC"
 
 	rows, err := r.DB.Query(query)
