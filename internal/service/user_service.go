@@ -140,6 +140,8 @@ func (s *UserService) Login(ctx context.Context, request *model.LoginRequest) (*
 		return nil, err
 	}
 
+	log.Println(user)
+
 	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(request.Password))
 	if err != nil {
 		s.Log.WithError(err).Error("Error Password is Wrong", err.Error())
@@ -197,13 +199,19 @@ func (s *UserService) GetFriends(ctx context.Context, filter *model.FriendFilter
 func (s *UserService) AddFriend(ctx context.Context, userId string, request *model.FriendRequest) error {
 	if err := helpers.ValidationError(s.Validate, request); err != nil {
 		s.Log.WithError(err).Error("failed to validate request body")
-		return err
+		return &fiber.Error{
+			Code:    fiber.StatusBadRequest,
+			Message: err.Error(),
+		}
 	}
 
 	_, errs := s.Repository.GetById(request)
 	if errs != nil {
-		s.Log.WithError(errs).Error("failed get user detail")
-		return errs
+		s.Log.WithError(errs).Error("User Not Found", errs.Error())
+		return &fiber.Error{
+			Code:    fiber.StatusNotFound,
+			Message: "User Not Found",
+		}
 	}
 
 	err := s.Repository.AddFriend(request.UserId, userId)
@@ -219,13 +227,19 @@ func (s *UserService) DeleteFriend(ctx context.Context, userId string, request *
 	// if err := s.Validate.Struct(request); err != nil {
 	if err := helpers.ValidationError(s.Validate, request); err != nil {
 		s.Log.WithError(err).Error("failed to validate request body")
-		return err
+		return &fiber.Error{
+			Code:    fiber.StatusBadRequest,
+			Message: err.Error(),
+		}
 	}
 
 	_, errs := s.Repository.GetById(request)
 	if errs != nil {
-		s.Log.WithError(errs).Error("failed get user detail")
-		return errs
+		s.Log.WithError(errs).Error("User Not Found", errs.Error())
+		return &fiber.Error{
+			Code:    fiber.StatusNotFound,
+			Message: "User Not Found",
+		}
 	}
 
 	err := s.Repository.DeleteFriend(request.UserId, userId)
@@ -239,6 +253,26 @@ func (s *UserService) DeleteFriend(ctx context.Context, userId string, request *
 
 func (s *UserService) LinkPhoneEmail(ctx context.Context, userId string, types string, value string) error {
 	log.Println(value)
+	user, errs := s.Repository.GetById(&model.FriendRequest{UserId: userId})
+	if errs != nil {
+		s.Log.WithError(errs).Error("failed get user detail")
+		return errs
+	}
+
+	if types == "email" && user.Email.String != "" {
+		return &fiber.Error{
+			Code:    fiber.StatusBadRequest,
+			Message: "Can't Change Email Of This Account",
+		}
+	}
+
+	if types == "phone" && user.Phone.String != "" {
+		return &fiber.Error{
+			Code:    fiber.StatusBadRequest,
+			Message: "Can't Change Phone Of This Account",
+		}
+	}
+
 	userData, _ := s.getEmailOrPhone(types, value)
 	if userData != nil && types == "email" {
 		return &fiber.Error{
@@ -254,27 +288,27 @@ func (s *UserService) LinkPhoneEmail(ctx context.Context, userId string, types s
 		}
 	}
 
+	err := s.Repository.LinkPhoneEmail(types, value, userId)
+	if err != nil {
+		s.Log.WithError(err).Error("failed to update data")
+		return err
+	}
+
+	return nil
+}
+
+func (s *UserService) UpdateUser(ctx context.Context, userId string, request model.UpdateProfileRequest) error {
+
 	user, errs := s.Repository.GetById(&model.FriendRequest{UserId: userId})
 	if errs != nil {
 		s.Log.WithError(errs).Error("failed get user detail")
 		return errs
 	}
 
-	if types == "email" && user.Email.String != "" {
-		return &fiber.Error{
-			Code:    fiber.StatusConflict,
-			Message: "Can't Change Email Of This Account",
-		}
-	}
+	user.Name = request.Name
+	user.ImageUrl = sql.NullString{String: request.ImageUrl, Valid: true}
 
-	if types == "phone" && user.Phone.String != "" {
-		return &fiber.Error{
-			Code:    fiber.StatusConflict,
-			Message: "Can't Change Phone Of This Account",
-		}
-	}
-
-	err := s.Repository.LinkPhoneEmail(types, value, userId)
+	err := s.Repository.UpdateUser(user)
 	if err != nil {
 		s.Log.WithError(err).Error("failed to update data")
 		return err

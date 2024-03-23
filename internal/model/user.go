@@ -50,7 +50,12 @@ type PhoneRequest struct {
 	Phone string `json:"phone" validate:"required,phone"`
 }
 
-// Custom validation function for CredentialValue
+type UpdateProfileRequest struct {
+	Name     string `json:"name" validate:"required,min=5,max=50"`
+	ImageUrl string `json:"imageUrl" validate:"required,url,min=1"`
+}
+
+// ValidateCredential Custom validation function for CredentialValue
 func ValidateCredential(fl validator.FieldLevel) bool {
 	credentialType := fl.Parent().FieldByName("CredentialType").String()
 	credentialValue := fl.Field().String()

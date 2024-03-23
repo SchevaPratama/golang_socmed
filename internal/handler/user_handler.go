@@ -4,6 +4,8 @@ import (
 	helpers "golang_socmed/internal/helper"
 	"golang_socmed/internal/model"
 	"golang_socmed/internal/service"
+	"net/url"
+	"path/filepath"
 	"strconv"
 	"strings"
 
@@ -171,7 +173,7 @@ func (h *UserHandler) AddFriend(c *fiber.Ctx) error {
 	}
 
 	if err := h.Service.AddFriend(c.UserContext(), userId, request); err != nil {
-		return &fiber.Error{Message: err.Error(), Code: 400}
+		return err
 	}
 
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
@@ -200,7 +202,7 @@ func (h *UserHandler) DeleteFriend(c *fiber.Ctx) error {
 	}
 
 	if err := h.Service.DeleteFriend(c.UserContext(), userId, request); err != nil {
-		return &fiber.Error{Message: err.Error(), Code: 400}
+		return err
 	}
 
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
@@ -259,10 +261,66 @@ func (h *UserHandler) LinkPhoneEmail(c *fiber.Ctx) error {
 	}
 
 	if err := h.Service.LinkPhoneEmail(c.UserContext(), userId, types, value); err != nil {
-		return &fiber.Error{Message: err.Error(), Code: 400}
+		return err
 	}
 
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"message": message,
 	})
+}
+
+func (h *UserHandler) UpdateUser(c *fiber.Ctx) error {
+	var request model.UpdateProfileRequest
+
+	userId, ok := c.Locals("userLoggedInId").(string)
+	if !ok {
+		return &fiber.Error{
+			Code:    500,
+			Message: "Failed",
+		}
+	}
+
+	if err := c.BodyParser(&request); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"message": "Invalid request body",
+		})
+	}
+
+	err := validate.Struct(request)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"message": err.Error(),
+		})
+	}
+
+	isImage, err := isImageUrl(request.ImageUrl)
+	if err != nil || isImage == false {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"message": "ImageUrl must be a valid image url",
+		})
+	}
+
+	err = h.Service.UpdateUser(c.UserContext(), userId, request)
+	if err != nil {
+		return err
+	}
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"message": "User updated",
+	})
+}
+
+func isImageUrl(urlStr string) (bool, error) {
+	u, err := url.Parse(urlStr)
+	if err != nil {
+		return false, err
+	}
+
+	ext := filepath.Ext(u.Path)
+	switch strings.ToLower(ext) {
+	case ".jpg", ".jpeg", ".png", ".gif", ".bmp", ".svg", ".webp":
+		return true, nil
+	default:
+		return false, nil
+	}
 }
