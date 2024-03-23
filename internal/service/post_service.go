@@ -16,13 +16,14 @@ import (
 )
 
 type PostService struct {
-	Repository *repository.PostRepository
-	Validate   *validator.Validate
-	Log        *logrus.Logger
+	Repository        *repository.PostRepository
+	Validate          *validator.Validate
+	Log               *logrus.Logger
+	CommentRepository *repository.CommentRepository
 }
 
-func NewPostService(r *repository.PostRepository, validate *validator.Validate, log *logrus.Logger) *PostService {
-	return &PostService{Repository: r, Validate: validate, Log: log}
+func NewPostService(r *repository.PostRepository, validate *validator.Validate, log *logrus.Logger, cr *repository.CommentRepository) *PostService {
+	return &PostService{Repository: r, Validate: validate, Log: log, CommentRepository: cr}
 }
 
 func (s *PostService) List(ctx context.Context, filter *model.PostFilter, userId string) ([]model.PostResponse, error) {
@@ -41,9 +42,25 @@ func (s *PostService) List(ctx context.Context, filter *model.PostFilter, userId
 		return nil, err
 	}
 
+	postIds := make([]string, len(posts))
 	newPosts := make([]model.PostResponse, len(posts))
 	for i, post := range posts {
-		newPosts[i] = *converter.PostConverter(&post)
+		postIds[i] = "'" + post.ID + "'"
+	}
+
+	comments, err := s.CommentRepository.List(postIds)
+	if err != nil {
+		s.Log.WithError(err).Error("failed get post lists")
+		return nil, err
+	}
+
+	groupedComments := make(map[string][]model.CommentResponse)
+	for _, comment := range comments {
+		groupedComments[comment.PostId] = append(groupedComments[comment.PostId], *converter.CommentConverter(&comment))
+	}
+
+	for i, post := range posts {
+		newPosts[i] = *converter.PostConverter(&post, groupedComments[post.ID])
 	}
 
 	return newPosts, nil

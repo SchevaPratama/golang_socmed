@@ -32,13 +32,14 @@ func Bootstrap(config *BootstrapConfig) {
 	productRepository := repository.NewProductRepository(config.DB)
 	bankAccountRepository := repository.NewBankAccountRepository(config.DB)
 	postRepository := repository.NewPostRepository(config.DB)
+	commentRepository := repository.NewCommentRepository(config.DB)
 
 	// setup services
 	imageService := service.NewImageService(aws, config.Validate, config.Log)
 	productService := service.NewProductService(productRepository, imageService, config.Validate, config.Log)
 	userService := service.NewUserService(userRepository, config.Validate, config.Log)
 	bankAccountService := service.NewBankAccountService(bankAccountRepository, config.Validate, config.Log)
-	postService := service.NewPostService(postRepository, config.Validate, config.Log)
+	postService := service.NewPostService(postRepository, config.Validate, config.Log, commentRepository)
 
 	// setup handler
 	productHandler := handler.NewProductHandler(productService, config.Log)

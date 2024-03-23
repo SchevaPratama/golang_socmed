@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-func PostConverter(post *entity.Post) *model.PostResponse {
+func PostConverter(post *entity.Post, comments []model.CommentResponse) *model.PostResponse {
 	postCreatedAt, err := time.Parse(time.RFC3339Nano, post.CreatedAt)
 	if err != nil {
 		log.Println("Error parsing timestamp:", err)
@@ -31,5 +31,6 @@ func PostConverter(post *entity.Post) *model.PostResponse {
 			FriendCount: len(post.UserFriends),
 			CreatedAt:   userCreatedAt.Format(time.RFC3339),
 		},
+		Comments: comments,
 	}
 }

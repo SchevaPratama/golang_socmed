@@ -22,9 +22,10 @@ type Post struct {
 // }
 
 type PostResponse struct {
-	PostId  string
-	Post    Post
-	Creator FriendResponse
+	PostId   string
+	Post     Post
+	Creator  FriendResponse
+	Comments []CommentResponse
 }
 
 type PostRequest struct {
