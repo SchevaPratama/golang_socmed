@@ -332,7 +332,15 @@ func (h *UserHandler) LinkPhoneEmail(c *fiber.Ctx) error {
 	}
 
 	var value string
-	types := strings.ReplaceAll(c.OriginalURL(), "/v1/user/link/", "")
+	var types string
+	// types := strings.ReplaceAll(c.OriginalURL(), "/v1/user/link/", "")
+	if strings.ReplaceAll(c.OriginalURL(), "/v1/user/link", "") == "" {
+		types = "email"
+	}
+	if strings.ReplaceAll(c.OriginalURL(), "/v1/user/link", "") == "/phone" {
+		types = "phone"
+	}
+	log.Println(types)
 	var message string
 
 	if types == "email" {

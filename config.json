@@ -7,5 +7,17 @@
   },
   "log": {
     "level": 6
+  },
+  "database": {
+    "username": "postgres",
+    "password": "1234",
+    "host": "localhost",
+    "port": 5432,
+    "name": "golang_marketplace",
+    "pool": {
+      "idle": 10,
+      "max": 100,
+      "lifetime": 300
+    }
   }
 }
