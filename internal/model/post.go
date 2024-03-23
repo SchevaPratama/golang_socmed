@@ -29,6 +29,6 @@ type PostResponse struct {
 }
 
 type PostRequest struct {
-	PostInHtml string   `json:"postInHtml"`
+	PostInHtml string   `json:"postInHtml" validate:"required,min=2,max=500"`
 	Tags       []string `query:"tags" validate:"required,dive,required"`
 }
