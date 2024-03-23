@@ -25,7 +25,7 @@ type PostResponse struct {
 	PostId   string            `json:"postId"`
 	Post     Post              `json:"post"`
 	Creator  FriendResponse    `json:"creator"`
-	Comments []CommentResponse `json:"comment"`
+	Comments []CommentResponse `json:"comments"`
 }
 
 type PostRequest struct {

@@ -128,7 +128,7 @@ func (r *PostRepository) Get(postId string, userId string, request *entity.Post)
 		return err
 	}
 
-	if !isFriend {
+	if !isFriend && !(request.UserId == userId) {
 		return &fiber.Error{
 			Code:    400,
 			Message: "postId is not the user’s friend",

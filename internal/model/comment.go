@@ -1,9 +1,9 @@
 package model
 
 type CommentResponse struct {
-	Comment   string
-	Creator   FriendResponse
-	CreatedAt string
+	Comment   string         `json:"comment"`
+	Creator   FriendResponse `json:"creator"`
+	CreatedAt string         `json:"createdAt"`
 }
 
 type CommentRequest struct {

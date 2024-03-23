@@ -51,18 +51,18 @@ func (b *PostHandler) List(c *fiber.Ctx) error {
 		return fiber.ErrBadRequest
 	}
 
-	products, err := b.Service.List(c.UserContext(), filter, userId)
+	posts, err := b.Service.List(c.UserContext(), filter, userId)
 	if err != nil {
 		return err
 	}
 
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"message": "ok",
-		"data":    products,
+		"data":    posts,
 		"meta": fiber.Map{
 			"limit":  1,
 			"offset": 1,
-			"total":  len(products),
+			"total":  len(posts),
 		},
 	})
 }
