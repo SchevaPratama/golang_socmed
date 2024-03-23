@@ -17,3 +17,8 @@ type PostResponse struct {
 	PostId string
 	Post   *Post
 }
+
+type PostRequest struct {
+	PostInHtml string   `json:"postInHtml"`
+	Tags       []string `query:"tags" validate:"required,dive,required"`
+}

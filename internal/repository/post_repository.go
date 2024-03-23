@@ -81,3 +81,14 @@ func (r *PostRepository) List(filter *model.PostFilter) ([]entity.Post, error) {
 
 	return posts, nil
 }
+
+func (r *PostRepository) Create(request *entity.Post) error {
+	fmt.Println(request)
+	query := `INSERT INTO posts VALUES ($1, $2, $3, $4)`
+	_, err := r.DB.Exec(query, request.ID, request.PostInHtml, pq.Array(request.Tags), request.UserId)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

@@ -57,7 +57,8 @@ func (c *RouteConfig) Setup() {
 	// bankAccount.Delete("/:id", c.BankAccountHandler.Delete)
 	// bankAccount.Post("/", c.BankAccountHandler.Create)
 
-	post := c.App.Group("/v1/post")
+	post := c.App.Group("/v1/post", authMiddleware)
 	post.Get("/", c.PostHandler.List)
+	post.Post("/", c.PostHandler.Create)
 
 }
