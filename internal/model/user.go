@@ -26,20 +26,20 @@ type FriendRequest struct {
 }
 
 type FriendResponse struct {
-	UserId      string
-	Name        string
-	ImageUrl    string
-	FriendCount int
-	CreatedAt   string
+	UserId      string `json:"userId"`
+	Name        string `json:"name"`
+	ImageUrl    string `json:"imageUrl"`
+	FriendCount int    `json:"friendCount"`
+	CreatedAt   string `json:"createdAt"`
 }
 
 type FriendFilter struct {
-	Limit      *int    `json:"limit"`
-	Offset     *int    `json:"offset"`
-	SortBy     *string `json:"sortBy"`
-	OrderBy    *string `json:"orderBy"`
-	OnlyFriend *bool   `json:"onlyFriend"`
-	Search     *string `json:"search"`
+	Limit      int    `json:"limit" validate:"min=0"`
+	Offset     int    `json:"offset" validate:"min=0"`
+	SortBy     string `json:"sortBy" validate:"oneof=createdAt friendCount"`
+	OrderBy    string `json:"orderBy" validate:"oneof=asc desc"`
+	OnlyFriend bool   `json:"onlyFriend" validate:"oneof=true false"`
+	Search     string `json:"search"`
 }
 
 type EmailRequest struct {

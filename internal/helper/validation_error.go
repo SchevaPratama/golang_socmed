@@ -27,21 +27,6 @@ func ValidationError(validate *validator.Validate, request interface{}) error {
 	uni = ut.New(en, en)
 
 	trans, _ := uni.GetTranslator("en")
-	// Register custom error messages for email
-	validate.RegisterTranslation("customCredential", trans, func(ut ut.Translator) error {
-		return ut.Add("customCredential", "{0} must be a valid email address", true)
-	}, func(ut ut.Translator, fe validator.FieldError) string {
-		t, _ := ut.T("customCredential", fe.Field())
-		return t
-	})
-
-	// Register custom error messages for phone
-	validate.RegisterTranslation("customCredential", trans, func(ut ut.Translator) error {
-		return ut.Add("customCredential", "{0} must start with an international calling code and be between 7 and 13 characters long", true)
-	}, func(ut ut.Translator, fe validator.FieldError) string {
-		t, _ := ut.T("customCredential", fe.Field())
-		return t
-	})
 
 	validate.RegisterTranslation("email", trans, func(ut ut.Translator) error {
 		return ut.Add("email", "{0} must be a valid email address", true) // default message

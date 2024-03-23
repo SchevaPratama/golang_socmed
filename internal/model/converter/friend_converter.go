@@ -8,7 +8,7 @@ import (
 )
 
 func FriendConverter(user *entity.User) *model.FriendResponse {
-	t, err := time.Parse(time.RFC3339Nano, user.CreatedAt)
+	t, err := time.Parse(time.RFC3339, user.CreatedAt)
 	if err != nil {
 		log.Println("Error parsing timestamp:", err)
 	}
