@@ -279,9 +279,9 @@ func (h *UserHandler) AddFriend(c *fiber.Ctx) error {
 		return fiber.ErrBadRequest
 	}
 
-	if userId == request.UserId {
-		return &fiber.Error{Code: fiber.ErrBadRequest.Code, Message: "You Can't Add Friend Yourself"}
-	}
+	// if userId == request.UserId {
+	// 	return &fiber.Error{Code: fiber.ErrBadRequest.Code, Message: "You Can't Add Friend Yourself"}
+	// }
 
 	if err := h.Service.AddFriend(c.UserContext(), userId, request); err != nil {
 		return err
