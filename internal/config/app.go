@@ -31,18 +31,22 @@ func Bootstrap(config *BootstrapConfig) {
 	userRepository := repository.NewUserRepository(config.DB)
 	productRepository := repository.NewProductRepository(config.DB)
 	bankAccountRepository := repository.NewBankAccountRepository(config.DB)
+	postRepository := repository.NewPostRepository(config.DB)
+	commentRepository := repository.NewCommentRepository(config.DB)
 
 	// setup services
 	imageService := service.NewImageService(aws, config.Validate, config.Log)
 	productService := service.NewProductService(productRepository, imageService, config.Validate, config.Log)
 	userService := service.NewUserService(userRepository, config.Validate, config.Log)
 	bankAccountService := service.NewBankAccountService(bankAccountRepository, config.Validate, config.Log)
+	postService := service.NewPostService(postRepository, config.Validate, config.Log, commentRepository)
 
 	// setup handler
 	productHandler := handler.NewProductHandler(productService, config.Log)
 	userHandler := handler.NewUserHandler(userService, config.Log)
 	bankAccountHandler := handler.NewBankAccountHandler(bankAccountService, config.Log)
 	ImageHandler := handler.NewImageHandler(imageService, config.Log)
+	postHandler := handler.NewPostHandler(postService, config.Log)
 
 	// recover from panic
 	config.App.Use(func(c *fiber.Ctx) error {
@@ -64,6 +68,7 @@ func Bootstrap(config *BootstrapConfig) {
 		UserHandler:        userHandler,
 		ImageHandler:       ImageHandler,
 		BankAccountHandler: bankAccountHandler,
+		PostHandler:        postHandler,
 	}
 
 	routeConfig.Setup()

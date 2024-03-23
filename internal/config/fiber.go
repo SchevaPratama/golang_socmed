@@ -2,6 +2,7 @@ package config
 
 import (
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/spf13/viper"
 )
 
@@ -11,6 +12,12 @@ func NewFiber(config *viper.Viper) *fiber.App {
 		ErrorHandler: NewErrorHandler(),
 		Prefork:      config.GetBool("web.prefork"),
 	})
+
+	app.Use(logger.New(logger.Config{
+		TimeFormat: "2 Jan 2006 15:04:05",
+		TimeZone:   "Asia/Jakarta",
+		Format:     "[${time}] ${status} - ${method} ${path} body: ${body} queryParams: ${queryParams}\n",
+	}))
 
 	return app
 }

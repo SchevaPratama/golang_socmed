@@ -3,7 +3,7 @@ package router
 import (
 	"golang_socmed/internal/handler"
 	"golang_socmed/internal/middleware"
-	"net/http"
+
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -13,6 +13,7 @@ type RouteConfig struct {
 	UserHandler        *handler.UserHandler
 	ImageHandler       *handler.ImageHandler
 	BankAccountHandler *handler.BankAccountHandler
+	PostHandler        *handler.PostHandler
 }
 
 func (c *RouteConfig) Setup() {
@@ -46,14 +47,19 @@ func (c *RouteConfig) Setup() {
 	user.Post("/link/phone", c.UserHandler.LinkPhoneEmail)
 	user.Patch("", c.UserHandler.UpdateUser)
 
-	c.App.Patch("/v1/bank/account", authMiddleware, func(c *fiber.Ctx) error {
-		return c.SendStatus(http.StatusNotFound)
-	})
-	bankAccount := c.App.Group("/v1/bank/account", authMiddleware)
-	bankAccount.Get("/", c.BankAccountHandler.List)
-	bankAccount.Get("/:id", c.BankAccountHandler.Get)
-	bankAccount.Patch("/:id", c.BankAccountHandler.Update)
-	bankAccount.Delete("/:id", c.BankAccountHandler.Delete)
-	bankAccount.Post("/", c.BankAccountHandler.Create)
+	// c.App.Patch("/v1/bank/account", authMiddleware, func(c *fiber.Ctx) error {
+	// 	return c.SendStatus(http.StatusNotFound)
+	// })
+	// bankAccount := c.App.Group("/v1/bank/account", authMiddleware)
+	// bankAccount.Get("/", c.BankAccountHandler.List)
+	// bankAccount.Get("/:id", c.BankAccountHandler.Get)
+	// bankAccount.Patch("/:id", c.BankAccountHandler.Update)
+	// bankAccount.Delete("/:id", c.BankAccountHandler.Delete)
+	// bankAccount.Post("/", c.BankAccountHandler.Create)
+
+	post := c.App.Group("/v1/post", authMiddleware)
+	post.Get("/", c.PostHandler.List)
+	post.Post("/", c.PostHandler.Create)
+	post.Post("/comment", c.PostHandler.CreateComment)
 
 }
