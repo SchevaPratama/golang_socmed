@@ -60,5 +60,6 @@ func (c *RouteConfig) Setup() {
 	post := c.App.Group("/v1/post", authMiddleware)
 	post.Get("/", c.PostHandler.List)
 	post.Post("/", c.PostHandler.Create)
+	post.Post("/comment", c.PostHandler.CreateComment)
 
 }

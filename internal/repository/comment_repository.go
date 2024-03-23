@@ -49,10 +49,10 @@ func (r *CommentRepository) List(postIds []string) ([]entity.Comment, error) {
 	return comments, nil
 }
 
-func (r *CommentRepository) Create(request *entity.Post) error {
+func (r *CommentRepository) Create(request *entity.Comment) error {
 	fmt.Println(request)
-	query := `INSERT INTO posts VALUES ($1, $2, $3, $4)`
-	_, err := r.DB.Exec(query, request.ID, request.PostInHtml, pq.Array(request.Tags), request.UserId)
+	query := `INSERT INTO comments VALUES ($1, $2, $3, $4)`
+	_, err := r.DB.Exec(query, request.ID, request.PostId, request.UserId, request.Comment)
 	if err != nil {
 		return err
 	}

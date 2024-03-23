@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"fmt"
 	"golang_socmed/internal/model"
 	"golang_socmed/internal/service"
 
@@ -85,6 +86,38 @@ func (b *PostHandler) Create(c *fiber.Ctx) error {
 	}
 
 	err := b.Service.Create(c.UserContext(), request, userId)
+	if err != nil {
+		// return fiber.ErrBadRequest
+		return &fiber.Error{Message: err.Error(), Code: 400}
+	}
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"code":    1,
+		"message": "success insert new posts",
+		"data":    request,
+	})
+}
+
+func (b *PostHandler) CreateComment(c *fiber.Ctx) error {
+	userId, ok := c.Locals("userLoggedInId").(string)
+	if !ok {
+		return &fiber.Error{
+			Code:    500,
+			Message: "Failed",
+		}
+	}
+
+	request := new(model.CommentRequest)
+
+	if err := c.BodyParser(request); err != nil {
+		b.Log.WithError(err).Error("failed to process request")
+		return fiber.ErrBadRequest
+		// return &fiber.Error{Message: "Opppss", Code: 400}
+	}
+
+	fmt.Println(request)
+
+	err := b.Service.CreateComment(c.UserContext(), request, userId)
 	if err != nil {
 		// return fiber.ErrBadRequest
 		return &fiber.Error{Message: err.Error(), Code: 400}

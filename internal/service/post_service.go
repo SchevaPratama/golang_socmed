@@ -88,3 +88,26 @@ func (s *PostService) Create(ctx context.Context, request *model.PostRequest, us
 
 	return nil
 }
+
+func (s *PostService) CreateComment(ctx context.Context, request *model.CommentRequest, userId string) error {
+	// if err := s.Validate.Struct(request); err != nil {
+	if err := helpers.ValidationError(s.Validate, request); err != nil {
+		s.Log.Error("failed to validate request body")
+		return err
+	}
+
+	newRequest := &entity.Comment{
+		ID:      uuid.New().String(),
+		PostId:  request.PostId,
+		Comment: request.Comment,
+		UserId:  userId,
+	}
+
+	err := s.CommentRepository.Create(newRequest)
+	if err != nil {
+		//s.Log.Error("failed to insert new data")
+		return err
+	}
+
+	return nil
+}
