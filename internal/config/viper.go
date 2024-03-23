@@ -9,7 +9,7 @@ import (
 
 func NewViper() *viper.Viper {
 	config := viper.New()
-	err := godotenv.Load()
+	err := godotenv.Load("/Users/efishery/Documents/socmed_golang/.env")
 	if err != nil {
 		log.Fatalf("Error loading .env file: %v", err)
 	}

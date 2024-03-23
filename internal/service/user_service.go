@@ -74,12 +74,14 @@ func (s *UserService) Register(ctx context.Context, request *model.RegisterReque
 
 	if request.CredentialType == "email" {
 		user = &entity.User{
+			ID:       uuid.New().String(),
 			Email:    sql.NullString{String: request.CredentialValue, Valid: true},
 			Name:     request.Name,
 			Password: string(hashedPassword),
 		}
 	} else {
 		user = &entity.User{
+			ID:       uuid.New().String(),
 			Phone:    sql.NullString{String: request.CredentialValue, Valid: true},
 			Name:     request.Name,
 			Password: string(hashedPassword),

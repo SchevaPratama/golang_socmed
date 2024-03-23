@@ -24,13 +24,13 @@ func (r *UserRepository) Create(credentialType string, credentialValue string, r
 	query := `INSERT INTO users`
 	var queryParams []interface{}
 	if credentialType == "email" {
-		query += ` (email, name, password) VALUES ($1, $2, $3)`
-		queryParams = append(queryParams, request.Email, request.Name, request.Password)
+		query += ` (id, email, name, password) VALUES ($1, $2, $3, $4)`
+		queryParams = append(queryParams, request.ID, request.Email, request.Name, request.Password)
 	}
 
 	if credentialType == "phone" {
-		query += ` (phone, name, password) VALUES ($1, $2, $3)`
-		queryParams = append(queryParams, request.Phone, request.Name, request.Password)
+		query += ` (id, phone, name, password) VALUES ($1, $2, $3, $4)`
+		queryParams = append(queryParams, request.ID, request.Phone, request.Name, request.Password)
 	}
 
 	_, err := r.DB.Exec(query, queryParams...)

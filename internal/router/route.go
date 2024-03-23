@@ -43,7 +43,7 @@ func (c *RouteConfig) Setup() {
 	friend.Delete("", c.UserHandler.DeleteFriend)
 
 	user := c.App.Group("/v1/user", authMiddleware)
-	user.Post("/link/email", c.UserHandler.LinkPhoneEmail)
+	user.Post("/link", c.UserHandler.LinkPhoneEmail)
 	user.Post("/link/phone", c.UserHandler.LinkPhoneEmail)
 	user.Patch("", c.UserHandler.UpdateUser)
 
