@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"fmt"
 	"golang_socmed/internal/model"
 	"golang_socmed/internal/service"
 
@@ -115,12 +114,10 @@ func (b *PostHandler) CreateComment(c *fiber.Ctx) error {
 		// return &fiber.Error{Message: "Opppss", Code: 400}
 	}
 
-	fmt.Println(request)
-
 	err := b.Service.CreateComment(c.UserContext(), request, userId)
 	if err != nil {
 		// return fiber.ErrBadRequest
-		return &fiber.Error{Message: err.Error(), Code: 400}
+		return err
 	}
 
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{

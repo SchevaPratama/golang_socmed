@@ -96,18 +96,25 @@ func (s *PostService) CreateComment(ctx context.Context, request *model.CommentR
 		return err
 	}
 
-	newRequest := &entity.Comment{
-		ID:      uuid.New().String(),
-		PostId:  request.PostId,
-		Comment: request.Comment,
-		UserId:  userId,
-	}
-
-	err := s.CommentRepository.Create(newRequest)
+	post := new(entity.Post)
+	err := s.Repository.Get(request.PostId, userId, post)
 	if err != nil {
-		//s.Log.Error("failed to insert new data")
+		s.Log.Error("failed to get post detail")
 		return err
 	}
+
+	// newRequest := &entity.Comment{
+	// 	ID:      uuid.New().String(),
+	// 	PostId:  request.PostId,
+	// 	Comment: request.Comment,
+	// 	UserId:  userId,
+	// }
+
+	// err = s.CommentRepository.Create(newRequest)
+	// if err != nil {
+	// 	//s.Log.Error("failed to insert new data")
+	// 	return err
+	// }
 
 	return nil
 }

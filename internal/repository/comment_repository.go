@@ -1,7 +1,6 @@
 package repository
 
 import (
-	"fmt"
 	"golang_socmed/internal/entity"
 	"strings"
 
@@ -50,7 +49,6 @@ func (r *CommentRepository) List(postIds []string) ([]entity.Comment, error) {
 }
 
 func (r *CommentRepository) Create(request *entity.Comment) error {
-	fmt.Println(request)
 	query := `INSERT INTO comments VALUES ($1, $2, $3, $4)`
 	_, err := r.DB.Exec(query, request.ID, request.PostId, request.UserId, request.Comment)
 	if err != nil {

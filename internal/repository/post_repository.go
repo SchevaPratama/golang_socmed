@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/gofiber/fiber/v2"
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
 )
@@ -101,6 +102,32 @@ func (r *PostRepository) Create(request *entity.Post) error {
 	_, err := r.DB.Exec(query, request.ID, request.PostInHtml, pq.Array(request.Tags), request.UserId)
 	if err != nil {
 		return err
+	}
+
+	return nil
+}
+
+func (r *PostRepository) Get(postId string, userId string, request *entity.Post) error {
+	query := "SELECT id, user_id FROM posts WHERE id = $1"
+	err := r.DB.Get(request, query, postId)
+	if err != nil {
+		return &fiber.Error{
+			Code:    404,
+			Message: "Not found",
+		}
+	}
+
+	var isFriend bool
+	err = r.DB.QueryRow(`SELECT $1 = ANY(friends) FROM users WHERE id = $2`, request.UserId, userId).Scan(&isFriend)
+	if err != nil {
+		return err
+	}
+
+	if !isFriend {
+		return &fiber.Error{
+			Code:    400,
+			Message: "postId is not the user’s friend",
+		}
 	}
 
 	return nil
