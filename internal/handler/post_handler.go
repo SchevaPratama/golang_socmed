@@ -44,7 +44,7 @@ func (b *PostHandler) List(c *fiber.Ctx) error {
 
 	filter := new(model.PostFilter)
 	filter.Limit = c.QueryInt("limit", 5)
-	filter.Offset = c.QueryInt("offset", 0)
+	filter.Offset = c.Query("offset", "0")
 
 	if err := c.QueryParser(filter); err != nil {
 		b.Log.WithError(err).Error("failed to process request")

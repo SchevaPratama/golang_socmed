@@ -1,10 +1,10 @@
 package model
 
 type PostFilter struct {
-	Search     string   `query:"search" validate:"omitempty,alphanum"`
+	Search     string   `query:"search" validate:"omitempty"`
 	SearchTags []string `query:"searchTag" validate:"omitempty,dive,required"`
-	Limit      int      `query:"limit" validate:"number,min=1"`
-	Offset     int      `query:"offset" validate:"number,min=0"`
+	Limit      int      `query:"limit" validate:"min=1"`
+	Offset     string   `query:"offset" validate:"number,gte=0"`
 }
 
 type Post struct {
@@ -22,7 +22,7 @@ type Post struct {
 // }
 
 type PostResponse struct {
-	PostId   string            `json:"post_id"`
+	PostId   string            `json:"postId"`
 	Post     Post              `json:"post"`
 	Creator  FriendResponse    `json:"creator"`
 	Comments []CommentResponse `json:"comment"`

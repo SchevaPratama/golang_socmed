@@ -63,7 +63,12 @@ func (r *PostRepository) List(filter *model.PostFilter, userId string) ([]entity
 		filterValues = append(filterValues, filter.Limit)
 	}
 
-	if filter.Offset != 0 {
+	newOffset, err := strconv.Atoi(filter.Offset)
+	if err != nil {
+		return nil, err
+	}
+
+	if newOffset != 0 {
 		query += fmt.Sprintf(" OFFSET $%s", strconv.Itoa(len(filterValues)+1))
 		filterValues = append(filterValues, filter.Offset)
 	}

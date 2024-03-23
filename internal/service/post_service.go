@@ -27,7 +27,6 @@ func NewPostService(r *repository.PostRepository, validate *validator.Validate, 
 }
 
 func (s *PostService) List(ctx context.Context, filter *model.PostFilter, userId string) ([]model.PostResponse, error) {
-
 	if err := helpers.ValidationError(s.Validate, filter); err != nil {
 		s.Log.WithError(err).Error("failed to validate request query params")
 		return nil, &fiber.Error{
