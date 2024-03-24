@@ -43,7 +43,7 @@ func NewDatabase(viper *viper.Viper) *sqlx.DB {
 		maxLifeTimeConnection = 100
 	}
 
-	dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s %s", host, port, username, password, database, os.Getenv("DB_PARAMS"))
+	dsn := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?%s", username, password, host, port, database, os.Getenv("DB_PARAMS"))
 
 	db, err := sqlx.Connect("postgres", dsn)
 	if err != nil {
