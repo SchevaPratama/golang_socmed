@@ -3,6 +3,7 @@ package handler
 import (
 	"golang_socmed/internal/model"
 	"golang_socmed/internal/service"
+	"strconv"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/sirupsen/logrus"
@@ -56,12 +57,17 @@ func (b *PostHandler) List(c *fiber.Ctx) error {
 		return err
 	}
 
+	newFilter, err := strconv.Atoi(filter.Offset)
+	if err != nil {
+		return fiber.ErrInternalServerError
+	}
+
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"message": "ok",
 		"data":    posts,
 		"meta": fiber.Map{
-			"limit":  1,
-			"offset": 1,
+			"limit":  filter.Limit,
+			"offset": newFilter,
 			"total":  len(posts),
 		},
 	})
